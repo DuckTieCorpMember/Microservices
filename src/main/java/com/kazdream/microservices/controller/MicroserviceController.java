@@ -46,4 +46,10 @@ public class MicroserviceController {
         microserviceService.updateProject(serviceID, serviceRequest);
         return new ResponseEntity<>("Microservice updated successfully", HttpStatus.OK);
     }
+
+    @DeleteMapping("/microservices/{serviceID}")
+    public ResponseEntity<Object> deleteMcroservice(@PathVariable Long serviceID){
+        microserviceService.deleteProject(serviceID);
+        return new ResponseEntity<>("Microservice deleted successfully.", HttpStatus.OK);
+    }
 }

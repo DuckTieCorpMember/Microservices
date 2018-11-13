@@ -8,7 +8,10 @@ import com.kazdream.microservices.repository.JarRepository;
 import com.kazdream.microservices.repository.MicroserviceRepository;
 import com.kazdream.microservices.repository.ProjectRepository;
 import com.kazdream.microservices.service.MicroserviceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,6 +25,8 @@ public class MicroserviceServiceImpl implements MicroserviceService {
     ProjectRepository projectRepository;
     @Autowired
     JarRepository jarRepository;
+
+    Logger logger = LoggerFactory.getLogger(MicroserviceServiceImpl.class);
 
     @Override
     public List<Microservice> getMicroservices() {
@@ -38,29 +43,24 @@ public class MicroserviceServiceImpl implements MicroserviceService {
             temp.setMicroservice(mm);
             jarRepository.save(temp);
         }
+        List<Project> allProjects = projectRepository.findAll();
         for (Project project: mm.getProjects()){
-            Project temp = new Project();
-            temp.setName(project.getName());
-            temp.setLink(project.getLink());
-            List<Microservice> mms = new ArrayList<>();
-            if(temp.getMicroservices() != null) {
-                for (Microservice m : temp.getMicroservices()) {
-                    mms.add(m);
-                }
-            }
-            mms.add(mm);
-            temp.setMicroservices(mms);
-            List<Project> existing = projectRepository.findAll();
-            boolean pr_exists=false;
-            for (Project pr:existing) {
-                if(pr.getLink() == temp.getLink()){
-                    pr_exists=true;
+            boolean found = false;
+            for (Project exists: allProjects) {
+                if(exists.getName().equals(project.getName())){
+                    exists.getMicroservices().add(mm);
+                    found = true;
                     break;
                 }
             }
-            if(!pr_exists)
-            {
-                projectRepository.save(temp);
+            if(!found) {
+                Project newProject = new Project();
+                newProject.setName(project.getName());
+                newProject.setLink(project.getLink());
+                List<Microservice> prServices = new ArrayList<>();
+                prServices.add(mm);
+                newProject.setMicroservices(prServices);
+                projectRepository.save(newProject);
             }
         }
     }
@@ -73,28 +73,73 @@ public class MicroserviceServiceImpl implements MicroserviceService {
                     microservice.setName(serviceRequest.getName());
                     microservice.setEndpoints(serviceRequest.getEndpoints());
                     microservice.setGit(serviceRequest.getGit());
-                    microservice.setJars(new ArrayList<Jar>());
-                    microservice.setProjects(new ArrayList<Project>());
-                    Microservice saved_service = microserviceRepository.save(microservice);
 
+                    List<Jar> ex_jar = microservice.getJars();
+                    for(Jar jj: ex_jar){
+                        jarRepository.delete(jj);
+                    }
+
+                    microservice.setJars(new ArrayList<Jar>());
                     for (Jar jar: serviceRequest.getJars()){
                         Jar temp = new Jar();
                         temp.setName(jar.getName());
                         temp.setLink(jar.getLink());
                         temp.setMicroservice(microservice);
-                        jarRepository.save(temp);
+                        Jar jj = jarRepository.save(temp);
+                        microservice.getJars().add(jj);
                     }
+
+                    List<Project> currentProject = microservice.getProjects();
+                    for(Project current: currentProject){
+                        current.getMicroservices().remove(microservice);
+                        if(current.getMicroservices().size() == 0){
+                            projectRepository.delete(current);
+                        }
+                    }
+                    microservice.setProjects(new ArrayList<>());
+                    List<Project> allProjects = projectRepository.findAll();
                     for (Project project: serviceRequest.getProjects()){
-                        Project temp = new Project();
-                        temp.setName(project.getName());
-                        temp.setLink(project.getLink());
+                        boolean found = false;
+                        for (Project exists: allProjects) {
+                            if(exists.getName().equals(project.getName())){
+                                exists.getMicroservices().add(microservice);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            Project newProject = new Project();
+                            newProject.setName(project.getName());
+                            newProject.setLink(project.getLink());
+                            List<Microservice> prServices = new ArrayList<>();
+                            prServices.add(microservice);
+                            newProject.setMicroservices(prServices);
+                            projectRepository.save(newProject);
+                        }
+                        microservice.getProjects().add(project);
                     }
-                    return saved_service;
+
+                    return microservice;
                 }).orElseThrow(()->new ResourceNotFoundException("Microservice is not found in database."));
     }
 
     @Override
     public void deleteProject(Long id) {
-
+        microserviceRepository.findById(id)
+                .map(microservice -> {
+                    List<Jar> jars = microservice.getJars();
+                    for(Jar jar: jars){
+                        jarRepository.delete(jar);
+                    }
+                    List<Project> currentProject = microservice.getProjects();
+                    for(Project current: currentProject){
+                        current.getMicroservices().remove(microservice);
+                        if(current.getMicroservices().size() == 0){
+                            projectRepository.delete(current);
+                        }
+                    }
+                    microserviceRepository.delete(microservice);
+                    return ResponseEntity.ok().build();
+                }).orElseThrow(()->new ResourceNotFoundException("Microservice is not found in database."));
     }
 }

@@ -24,19 +24,19 @@ public class JarController {
         return new ResponseEntity<>(jarService.getJars(), HttpStatus.OK);
     }
 
-    @PostMapping("/jars")
-    public ResponseEntity<Object> createJar(@Valid @RequestBody Jar jar){
-        jarService.createJar(jar);
-        return new ResponseEntity<>("Jar created successfully.", HttpStatus.OK);
-    }
-
-    @PutMapping("/jars/{jarId}")
-    public ResponseEntity<Object> updateJar(@PathVariable Long jarId,
-                                 @Valid @RequestBody Jar jarRequest){
-        jarService.updateJar(jarId, jarRequest);
-        return new ResponseEntity<>("Jar updated successfully", HttpStatus.OK);
-    }
-
+//    @PostMapping("/jars")
+//    public ResponseEntity<Object> createJar(@Valid @RequestBody Jar jar){
+//        jarService.createJar(jar);
+//        return new ResponseEntity<>("Jar created successfully.", HttpStatus.OK);
+//    }
+//
+//    @PutMapping("/jars/{jarId}")
+//    public ResponseEntity<Object> updateJar(@PathVariable Long jarId,
+//                                 @Valid @RequestBody Jar jarRequest){
+//        jarService.updateJar(jarId, jarRequest);
+//        return new ResponseEntity<>("Jar updated successfully", HttpStatus.OK);
+//    }
+//
     @DeleteMapping("/jars/{jarId}")
     public ResponseEntity<Object> deleteJar(@PathVariable Long jarId){
         jarService.deleteJar(jarId);

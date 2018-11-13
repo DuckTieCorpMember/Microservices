@@ -22,19 +22,19 @@ public class ProjectController {
         return projectService.getProjects();
     }
 
-    @PostMapping("/projects")
-    public ResponseEntity<Object> createProject(@Valid @RequestBody Project project){
-        projectService.createProject(project);
-        return new ResponseEntity<>("Project created successfully.", HttpStatus.OK);
-    }
-
-    @PutMapping("/projects/{projectId}")
-    public ResponseEntity<Object> updateProject(@PathVariable Long projectId,
-                                 @Valid @RequestBody Project projectRequest){
-        projectService.updateProject(projectId, projectRequest);
-        return new ResponseEntity<>("Project updated successfully.", HttpStatus.OK);
-    }
-
+//    @PostMapping("/projects")
+//    public ResponseEntity<Object> createProject(@Valid @RequestBody Project project){
+//        projectService.createProject(project);
+//        return new ResponseEntity<>("Project created successfully.", HttpStatus.OK);
+//    }
+//
+//    @PutMapping("/projects/{projectId}")
+//    public ResponseEntity<Object> updateProject(@PathVariable Long projectId,
+//                                 @Valid @RequestBody Project projectRequest){
+//        projectService.updateProject(projectId, projectRequest);
+//        return new ResponseEntity<>("Project updated successfully.", HttpStatus.OK);
+//    }
+//
     @DeleteMapping("/projects/{projectId}")
     public ResponseEntity<Object> deleteProject(@PathVariable Long projectId){
         projectService.deleteProject(projectId);
