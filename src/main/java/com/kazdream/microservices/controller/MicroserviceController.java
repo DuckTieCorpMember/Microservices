@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
+@CrossOrigin(maxAge = 3600)
 @RestController
 public class MicroserviceController {
 
